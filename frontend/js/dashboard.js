@@ -19,22 +19,37 @@ function cambiarModulo(moduloActivo, idBoton) {
     }
 }
 
-// Configuración inicial de usuario (SSO NTLM)
+// Configuración inicial de usuario (SSO NTLM) y Carga de Panel General
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const usuario = await fetchAPI('/auth/mi-sesion');
         document.getElementById('user-info').innerHTML = `<i class="fa-solid fa-user-check"></i> ${usuario.nombre} <br><small>${usuario.rol}</small>`;
 
-        // Si es Cajero, bloquear la nómina por completo
         if (usuario.rol !== 'Administrador') {
             document.getElementById('menu-nomina').classList.add('hidden');
+            // Si quieres ocultar el menú de reportes al cajero, descomenta esta línea:
+            // document.getElementById('menu-reportes').classList.add('hidden');
         }
 
-        // Cargamos la pantalla de inicio al entrar
+        // ====================================================
+        // NUEVO: CARGAR LOS DATOS DINÁMICOS DEL INICIO
+        // ====================================================
+        const resumen = await fetchAPI('/reportes/resumen');
+        
+        // Seleccionamos las etiquetas <h2> dentro del módulo de inicio (en el mismo orden en que las pusimos)
+        const tarjetas = document.querySelectorAll('#modulo-inicio .dashboard-card h2');
+        
+        // Les inyectamos los datos reales
+        tarjetas[0].textContent = `$${resumen.ventasHoy.toFixed(2)}`; // Ventas Hoy
+        tarjetas[1].textContent = resumen.productosActivos;           // Productos
+        tarjetas[2].textContent = resumen.personal;                   // Personal
+        tarjetas[3].textContent = resumen.stockBajo;                  // Stock Bajo
+        // ====================================================
+
         cambiarModulo('modulo-inicio', 'menu-inicio');
 
     } catch (error) {
-        // Si hay error (ej. el usuario de Windows no está en la BD), detenemos el "Cargando..." y lo mostramos en rojo
+        
         document.getElementById('user-info').innerHTML = `<i class="fa-solid fa-user-xmark" style="color:#ef4444;"></i> <br><small style="color:#ef4444;">${error.message}</small>`;
         cambiarModulo('modulo-inicio', 'menu-inicio');
     }

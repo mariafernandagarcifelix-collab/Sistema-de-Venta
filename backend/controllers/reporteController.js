@@ -1,5 +1,6 @@
 const Venta = require('../models/Venta');
 const Producto = require('../models/Producto');
+const Empleado = require('../models/Empleado');
 
 // 1. Reporte: Ventas por Día
 const ventasPorDia = async (req, res) => {
@@ -81,4 +82,37 @@ const productosMasVendidos = async (req, res) => {
     }
 };
 
-module.exports = { ventasPorDia, ventasPorMes, productosMasVendidos };
+const resumenDashboard = async (req, res) => {
+    try {
+        // 1. Calcular Ventas de Hoy
+        const inicioDia = new Date();
+        inicioDia.setHours(0, 0, 0, 0); // Establecer a la medianoche de hoy
+        
+        const ventasHoy = await Venta.aggregate([
+            { $match: { fecha: { $gte: inicioDia } } },
+            { $group: { _id: null, totalVentas: { $sum: '$total' } } }
+        ]);
+        const totalDineroHoy = ventasHoy.length > 0 ? ventasHoy[0].totalVentas : 0;
+
+        // 2. Contar Productos Activos
+        const totalProductos = await Producto.countDocuments();
+
+        // 3. Contar Empleados
+        const totalEmpleados = await Empleado.countDocuments();
+
+        // 4. Contar Stock Bajo (Ejemplo: productos con 5 o menos en existencia)
+        const stockBajo = await Producto.countDocuments({ stock: { $lte: 5 } });
+
+        // Mandar todo al frontend
+        res.json({
+            ventasHoy: totalDineroHoy,
+            productosActivos: totalProductos,
+            personal: totalEmpleados,
+            stockBajo: stockBajo
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al cargar resumen del dashboard' });
+    }
+};
+
+module.exports = { ventasPorDia, ventasPorMes, productosMasVendidos, resumenDashboard };
