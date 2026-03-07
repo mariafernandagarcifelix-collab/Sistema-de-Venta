@@ -1,0 +1,299 @@
+:root {
+    --primary: #6366f1;
+    --bg-light: #f1f5f9;
+    --glass: rgba(255, 255, 255, 0.25);
+    --border: rgba(255, 255, 255, 0.18);
+}
+
+body {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    background-attachment: fixed; /* Evita que el fondo se corte al hacer scroll */
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    color: white; /* Texto blanco por defecto para que resalte en el cristal */
+}
+
+/* GLASS EFFECT */
+.glass {
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+/* SIDEBAR */
+.sidebar {
+    position: fixed;
+    width: 250px;
+    height: 100vh;
+    padding: 20px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.sidebar h3 {
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.user-info {
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 10px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.sidebar a {
+    display: block;
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* CONTENT */
+.content {
+    margin-left: 250px;
+    padding: 30px;
+    min-height: 100vh;
+}
+
+/* DASHBOARD CARDS & PANELS */
+.dashboard-card {
+    padding: 25px;
+    color: white;
+    transition: 0.3s;
+    height: 100%;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.pos-panel {
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Ajuste para que las tablas de Bootstrap se vean bien en el cristal */
+.table {
+    color: white !important;
+    --bs-table-bg: transparent;
+    --bs-table-hover-bg: rgba(255,255,255,0.1);
+}
+.table-dark th {
+    background-color: rgba(0,0,0,0.4) !important;
+}
+
+/* Inputs para que no desentonen con el cristal */
+.form-control, .form-select {
+    background: rgba(255,255,255,0.9);
+}
+
+/* DARK MODE */
+/* =========================================
+   DARK MODE (Degradado y Glassmorphism)
+========================================= */
+.dark {
+    /* Degradado de azul noche a morado profundo */
+    background: linear-gradient(135deg, #020617, #1e1b4b, #4c1d95) !important; 
+    background-attachment: fixed !important;
+}
+
+/* Glassmorphism translúcido para los paneles en Modo Oscuro */
+.dark .glass {
+    background: rgba(255, 255, 255, 0.04); /* Cristal claro súper transparente */
+    backdrop-filter: blur(16px); /* Desenfoque fuerte para el efecto esmerilado */
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Borde blanco sutil */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); /* Sombra para dar profundidad */
+}
+
+/* Ajuste específico para que el Sidebar se fusione mejor con la orilla en Modo Oscuro */
+/* Ajuste específico para el Sidebar en Modo Oscuro (Glassmorphism Unificado) */
+.dark .sidebar.glass {
+    background: rgba(255, 255, 255, 0.04); /* Mismo cristal claro súper transparente */
+    backdrop-filter: blur(16px); /* Mismo desenfoque fuerte */
+    -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid rgba(255, 255, 255, 0.15); /* Mismo borde brillante, solo a la derecha */
+    border-radius: 0; /* Lo mantenemos en 0 para que siga pegado a la orilla izquierda */
+    box-shadow: 4px 0 24px 0 rgba(0, 0, 0, 0.2); /* Sombra proyectada hacia la derecha del menú */
+}
+
+/* =========================================
+   TABLAS EN MODO OSCURO (Contraste de textos)
+========================================= */
+
+/* 1. TÍTULOS DE COLUMNAS (Blanco puro y resaltado) */
+.dark table thead th {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    background-color: rgba(0, 0, 0, 0.3) !important; /* Fondo ligerito para separar del contenido */
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 2. FILAS DE PRODUCTOS/DATOS (Blanco platinado / Gris claro) */
+.dark table tbody td {
+    color: #cbd5e1 !important; /* Color slate-300 para diferenciar de los títulos */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Evitar que Bootstrap cambie el fondo de las filas al pasar el mouse en modo oscuro */
+.dark .table-hover>tbody>tr:hover>td {
+    color: #ffffff !important; /* Que el producto se ilumine al pasarle el mouse */
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Para asegurar que los iconos dentro del menú estén alineados */
+.sidebar a i {
+    width: 25px;
+    text-align: center;
+    margin-right: 5px;
+}
+/* LA REGLA DE ORO DE TU APP (No borrar) */
+.hidden { display: none !important; }
+
+/* =========================================
+   BOTONES - MODO CLARO (Combinan con el fondo)
+========================================= */
+/* Botón Primario (Agregar, Guardar, Registrar) -> Azul Índigo */
+.btn-primary {
+    background-color: #667eea !important; 
+    border-color: #667eea !important;
+    color: white !important;
+}
+.btn-primary:hover {
+    background-color: #5a6fd6 !important;
+    border-color: #5a6fd6 !important;
+}
+
+/* Botón Success (Cobrar Venta) -> Morado Claro */
+.btn-success {
+    background-color: #764ba2 !important; 
+    border-color: #764ba2 !important;
+    color: white !important;
+}
+.btn-success:hover {
+    background-color: #653e8f !important;
+    border-color: #653e8f !important;
+}
+
+/* =========================================
+   BOTONES - MODO CLARO
+========================================= */
+/* Todos los botones de acción unificados al Azul Índigo (igual al de Guardar) */
+.btn-primary, 
+.btn-success {
+    background-color: #667eea !important; 
+    border-color: #667eea !important;
+    color: white !important;
+}
+.btn-primary:hover, 
+.btn-success:hover {
+    background-color: #5a6fd6 !important;
+    border-color: #5a6fd6 !important;
+}
+
+/* Botones de Eliminar -> Rojo Oscuro Elegante */
+.btn-danger, 
+.btn-outline-danger {
+    background-color: #991b1b !important; /* Rojo oscuro rubí */
+    border-color: #991b1b !important;
+    color: white !important;
+}
+.btn-danger:hover, 
+.btn-outline-danger:hover {
+    background-color: #7f1d1d !important; /* Más oscuro al pasar el mouse */
+    border-color: #7f1d1d !important;
+    color: white !important;
+}
+
+/* =========================================
+   BOTONES - MODO OSCURO
+========================================= */
+/* Botones de acción (Guardar, Cobrar, Registrar) -> Violeta Vibrante para resaltar */
+.dark .btn-primary, 
+.dark .btn-success {
+    background-color: #6d28d9 !important; /* Violeta luminoso que destaca sobre el fondo noche */
+    border: 1px solid rgba(255, 255, 255, 0.2) !important; /* Borde cristalino */
+    color: #ffffff !important; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .btn-primary:hover, 
+.dark .btn-success:hover {
+    background-color: #5b21b6 !important; /* Violeta más profundo al pasar el mouse */
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Botones de Eliminar -> Mismo Rojo Oscuro Elegante del modo claro */
+.dark .btn-danger, 
+.dark .btn-outline-danger {
+    background-color: #991b1b !important; 
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .btn-danger:hover, 
+.dark .btn-outline-danger:hover {
+    background-color: #7f1d1d !important; 
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* =========================================
+   INPUTS Y SELECTS - MODO OSCURO
+========================================= */
+/* Fondo oscuro semi-transparente para las cajas de texto */
+.dark .form-control,
+.dark .form-select {
+    background-color: rgba(15, 23, 42, 0.6) !important; 
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+
+/* Color del texto de pista (placeholder) */
+.dark .form-control::placeholder {
+    color: #94a3b8 !important; 
+}
+
+/* Efecto cuando das clic para escribir en el textbox (Focus) */
+.dark .form-control:focus,
+.dark .form-select:focus {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+    border-color: #a855f7 !important; /* Resplandor morado */
+    box-shadow: 0 0 0 0.25rem rgba(168, 85, 247, 0.25) !important;
+    color: #ffffff !important;
+}
+
+/* Fondo oscuro para la lista de opciones desplegable del Select */
+.dark .form-select option {
+    background-color: #0f172a;
+    color: white;
+}
+
+/* Ajuste para que las imágenes del inventario no salgan recortadas */
+#inventario-body img {
+    width: 50px !important;
+    height: 50px !important;
+    object-fit: contain !important; /* Mantiene la proporción original sin recortar */
+    border-radius: 8px;
+    padding: 3px; /* Pequeño margen interno para que parezca un ícono de app */
+}
