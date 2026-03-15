@@ -1,9 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-// Como ya pasó por los middlewares globales, req.usuario ya tiene los datos de Windows
-router.get('/mi-sesion', (req, res) => {
-    res.json(req.usuario);
-});
+// Importamos a nuestro "cadenero" (el escáner de gafetes)
+const { ssoMiddleware } = require('../middlewares/auth');
+
+// Importamos el controlador que acabamos de crear
+const { loginSSO, logout } = require('../controllers/authController');
+
+// La ruta que el frontend va a llamar automáticamente apenas abra la página
+// OJO: Primero pasa por el ssoMiddleware y luego llega al loginSSO
+router.get('/me', ssoMiddleware, loginSSO);
+
+router.post('/logout', logout);
 
 module.exports = router;

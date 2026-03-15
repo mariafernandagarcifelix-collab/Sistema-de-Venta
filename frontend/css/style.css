@@ -297,3 +297,59 @@ body {
     border-radius: 8px;
     padding: 3px; /* Pequeño margen interno para que parezca un ícono de app */
 }
+
+/* Modales Glassmorphism */
+.modal-content.glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+}
+.dark .modal-content.glass {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+.dark .modal-header { border-bottom-color: rgba(255,255,255,0.1); }
+.dark .modal-footer { border-top-color: rgba(255,255,255,0.1); }
+.dark .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
+/* ==========================================
+   MEJORAS VISUALES: NÓMINA Y SCROLLBAR
+   ========================================== */
+
+/* Contenedor del scroll moderno */
+.tabla-scroll {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+/* Diseño del Scrollbar (estilo Glassmorphism) */
+.tabla-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+.tabla-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+.tabla-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+}
+.tabla-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+/* Mejoras al contenedor de "Generar Pago" */
+.pago-container {
+    padding: 30px;
+}
+.pago-container input,
+.pago-container select {
+    border-radius: 10px;
+}
+.pago-container button {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}

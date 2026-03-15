@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Punto de Venta - UI Avanzada</title>
+    <title>Sistema de Venta</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -36,7 +36,8 @@
                 <div class="col-md-3">
                     <div class="glass dashboard-card animate__animated animate__fadeInUp">
                         <h5><i class="fa-solid fa-dollar-sign"></i> Ventas Hoy</h5>
-                        <h2 class="fw-bold">$3,200</h2> </div>
+                        <h2 class="fw-bold">$3,200</h2> 
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <div class="glass dashboard-card animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
@@ -60,7 +61,7 @@
         </div>
 
         <div id="modulo-ventas" class="hidden animate__animated animate__fadeIn">
-            <h2 class="mb-4"><i class="fa-solid fa-cart-shopping"></i> Caja Registradora</h2>
+            <h2 class="mb-4 text-white"><i class="fa-solid fa-cart-shopping"></i> Caja Registradora</h2>
             <div class="row g-4">
                 <div class="col-md-8">
                     <div class="glass pos-panel h-100">
@@ -73,8 +74,8 @@
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2);">
+                                <thead class="table-dark">
+                                    <tr>
                                         <th>Producto</th>
                                         <th>Precio</th>
                                         <th>Cant.</th>
@@ -89,7 +90,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="glass pos-panel h-100 text-center d-flex flex-column justify-content-center">
-                        <h4 class="mb-3">Total a Pagar</h4>
+                        <h4 class="mb-3 text-white">Total a Pagar</h4>
                         <h1 class="display-3 fw-bold text-success" style="text-shadow: 0 2px 10px rgba(0,0,0,0.2);">$<span id="total-venta">0.00</span></h1>
                         <button class="btn btn-success btn-lg w-100 mt-4 rounded-pill shadow" onclick="procesarVenta()">
                             <i class="fa-solid fa-cash-register"></i> Cobrar Venta
@@ -100,32 +101,19 @@
         </div>
 
         <div id="modulo-inventario" class="hidden animate__animated animate__fadeIn">
-            <h2 class="mb-4"><i class="fa-solid fa-box"></i> Gestión de Inventario</h2>
-            <div class="glass pos-panel mb-4">
-                <form id="form-producto" class="row g-3">
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" id="prod-nombre" placeholder="Nombre" required>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" class="form-control" id="prod-precio" placeholder="Precio" step="0.01" required>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" class="form-control" id="prod-stock" placeholder="Stock" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" id="prod-categoria" placeholder="Categoría" required>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="hidden" id="prod-imagen" value="default.jpg">
-                        <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
-                    </div>
-                </form>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-white"><i class="fa-solid fa-box"></i> Gestión de Inventario</h2>
+                <div>
+                    <button class="btn btn-success me-2 shadow" data-bs-toggle="modal" data-bs-target="#modalAbastecer"><i class="fa-solid fa-truck-ramp-box"></i> Abastecer</button>
+                    <button class="btn btn-primary shadow" onclick="abrirModalProducto()"><i class="fa-solid fa-plus"></i> Nuevo Producto</button>
+                </div>
             </div>
+            
             <div class="glass pos-panel">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
-                        <thead>
-                            <tr style="border-bottom: 2px solid rgba(255,255,255,0.2);">
+                        <thead class="table-dark">
+                            <tr>
                                 <th>IMG</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Acciones</th>
                             </tr>
                         </thead>
@@ -136,7 +124,45 @@
         </div>
 
         <div id="modulo-reportes" class="hidden animate__animated animate__fadeIn">
-            <h2 class="mb-4"><i class="fa-solid fa-chart-pie"></i> Estadísticas</h2>
+            <h2 class="mb-4 text-white"><i class="fa-solid fa-chart-pie"></i> Estadísticas y Reportes</h2>
+            
+            <div class="glass pos-panel mb-4">
+                <h4 class="mb-3 text-white"><i class="fa-solid fa-list-check"></i> Historial de Ventas</h4>
+                <form id="form-filtros" class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label text-white">Desde</label>
+                        <input type="date" id="filtro-inicio" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white">Hasta</label>
+                        <input type="date" id="filtro-fin" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-white">Producto</label>
+                        <select id="filtro-producto" class="form-select">
+                            <option value="">Todos los productos...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button type="button" class="btn btn-secondary w-100" onclick="limpiarFiltros()"><i class="fa-solid fa-eraser"></i></button>
+                    </div>
+                </form>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark" style="position: sticky; top: 0; z-index: 10;">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Cajero</th>
+                                <th>Productos (Cant.)</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historial-ventas-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="glass pos-panel">
@@ -154,82 +180,186 @@
         </div>
 
         <div id="modulo-nomina" class="hidden animate__animated animate__fadeIn">
-            <h2 class="mb-4 text-white"><i class="fa-solid fa-users"></i> Recursos Humanos y Nómina</h2>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-white"><i class="fa-solid fa-users"></i> Recursos Humanos</h2>
+                <button class="btn btn-primary shadow" onclick="abrirModalEmpleado()"><i class="fa-solid fa-user-plus"></i> Nuevo Empleado</button>
+            </div>
             
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="glass pos-panel h-100">
-                        <h4 class="mb-3 text-white">Gestión de Empleados</h4>
-                        <form id="form-empleado" class="row g-2 mb-4">
-                            <div class="col-12">
-                                <input type="text" class="form-control" id="emp-nombre" placeholder="Nombre completo" required>
-                            </div>
-                            <div class="col-6">
-                                <input type="text" class="form-control" id="emp-puesto" placeholder="Puesto" required>
-                            </div>
-                            <div class="col-6">
-                                <input type="number" class="form-control" id="emp-salario" placeholder="Salario base ($)" required>
-                            </div>
-                            <div class="col-12 mt-2">
-                                <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-user-plus"></i> Registrar Empleado</button>
-                            </div>
-                        </form>
-
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2);">
+            <div class="row g-4 mb-4">
+                
+                <div class="col-md-7">
+                    <div class="glass pos-panel h-100 d-flex flex-column">
+                        <h4 class="mb-4 text-white">
+                            <i class="fa-solid fa-address-book me-2"></i> Empleados
+                        </h4>
+                        <div class="table-responsive tabla-scroll" style="height: 275px;">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-dark" style="position: sticky; top: 0; z-index: 10;">
+                                    <tr>
                                         <th>Nombre</th>
                                         <th>Puesto</th>
-                                        <th>Salario</th>
+                                        <th>Sueldo Diario</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody id="empleados-body">
-                                    </tbody>
+                                <tbody id="empleados-body"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="glass pos-panel h-100">
-                        <h4 class="mb-3 text-white">Registro de Pagos</h4>
-                        <form id="form-pago" class="row g-2 mb-4">
-                            <div class="col-12">
-                                <select id="pago-empleado" class="form-select" required>
-                                    <option value="">Selecciona un empleado...</option>
+                <div class="col-md-5">
+                    <div class="glass pos-panel h-100 d-flex flex-column">
+                        <h4 class="mb-4 text-white">
+                            <i class="fa-solid fa-file-invoice-dollar me-2"></i> Generar Pago
+                        </h4>
+                        
+                        <form id="form-pago" class="d-flex flex-column">
+                            
+                            <div class="mb-4 pt-2">
+                                <label class="text-white fw-semibold mb-2">Empleado</label>
+                                <select id="pago-empleado" class="form-select shadow-sm" style="border-radius: 8px;" required>
+                                    <option value="">Selecciona...</option>
                                 </select>
                             </div>
-                            <div class="col-12">
-                                <input type="number" class="form-control" id="pago-monto" placeholder="Monto (Opcional: toma el salario base)">
+                            
+                            <div class="row g-3 mb-2">
+                                <div class="col-6">
+                                    <label class="text-white fw-semibold mb-2">Días Trabajados</label>
+                                    <input type="number" class="form-control shadow-sm text-center fw-bold" id="pago-dias" value="1" min="1" style="border-radius: 8px;" required>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <label class="text-white fw-bold mb-2">Pago Total</label>
+                                    <div class="position-relative">
+                                        <span class="position-absolute top-50 start-0 translate-middle-y ms-3 text-success fw-bold fs-5">$</span>
+                                        <input type="text" class="form-control shadow-sm text-dark fw-bold text-end pe-3" id="pago-total" readonly style="background-color: #e2e8f0; padding-left: 35px; border-radius: 8px;">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-12 mt-2">
-                                <button type="submit" class="btn btn-success w-100"><i class="fa-solid fa-money-bill-wave"></i> Registrar Pago</button>
+                            
+                            <div class="text-center mt-4 pt-3">
+                                <button type="submit" class="btn btn-primary px-5 py-2 shadow rounded-pill fw-bold" style="letter-spacing: 0.5px;">
+                                    <i class="fa-solid fa-check me-2"></i> Efectuar Pago
+                                </button>
                             </div>
+                            
                         </form>
-
-                        <h5 class="mb-3 text-white">Historial Reciente</h5>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2);">
-                                        <th>Fecha</th>
-                                        <th>Empleado</th>
-                                        <th>Monto</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pagos-body">
-                                    </tbody>
-                            </table>
-                        </div>
                     </div>
+                </div>
+
+            </div>
+
+            <div class="glass pos-panel mt-4">
+                <h4 class="mb-3 text-white"><i class="fa-solid fa-list-check"></i> Historial de Pagos</h4>
+                <form id="form-filtros-nomina" class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label text-white">Desde</label>
+                        <input type="date" id="filtro-inicio-nomina" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white">Hasta</label>
+                        <input type="date" id="filtro-fin-nomina" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-white">Empleado</label>
+                        <select id="filtro-empleado-nomina" class="form-select">
+                            <option value="">Todos los empleados...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button type="button" class="btn btn-secondary w-100" onclick="limpiarFiltrosNomina()"><i class="fa-solid fa-eraser"></i></button>
+                    </div>
+                </form>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark" style="position: sticky; top: 0; z-index: 10;">
+                            <tr>
+                                <th>Fecha de Pago</th>
+                                <th>Empleado</th>
+                                <th>Días Pagados</th>
+                                <th>Total Pagado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historial-nomina-body"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
+    </div> <div class="modal fade" id="modalProducto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalProductoTitle">Agregar Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="form-producto">
+                    <div class="modal-body">
+                        <input type="hidden" id="prod-id">
+                        <div class="mb-3"><label>Nombre</label><input type="text" class="form-control" id="prod-nombre" required></div>
+                        <div class="row">
+                            <div class="col-6 mb-3"><label>Precio</label><input type="number" class="form-control" id="prod-precio" step="0.01" required></div>
+                            <div class="col-6 mb-3"><label>Stock</label><input type="number" class="form-control" id="prod-stock" required></div>
+                        </div>
+                        <div class="mb-3"><label>Categoría</label><input type="text" class="form-control" id="prod-categoria" required></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
+    <div class="modal fade" id="modalAbastecer" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass">
+                <div class="modal-header">
+                    <h5 class="modal-title">Abastecer Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="form-abastecer">
+                    <div class="modal-body">
+                        <div class="mb-3"><label>Producto</label><select id="abastecer-prod" class="form-select" required></select></div>
+                        <div class="mb-3"><label>Cantidad a Ingresar</label><input type="number" class="form-control" id="abastecer-cant" min="1" required></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success w-100"><i class="fa-solid fa-plus"></i> Sumar al Stock</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEmpleado" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEmpleadoTitle">Empleado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="form-empleado-modal">
+                    <div class="modal-body">
+                        <input type="hidden" id="emp-id">
+                        <div class="mb-3"><label>Nombre</label><input type="text" class="form-control" id="emp-nombre" required></div>
+                        <div class="mb-3"><label>Puesto</label><input type="text" class="form-control" id="emp-puesto" required></div>
+                        <div class="mb-3"><label>Sueldo Base (Por Día)</label><input type="number" class="form-control" id="emp-salario" required></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-save"></i> Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script src="js/api.js"></script>
     <script src="js/theme.js"></script> 
     <script src="js/dashboard.js"></script>

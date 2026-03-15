@@ -22,36 +22,35 @@ function cambiarModulo(moduloActivo, idBoton) {
 // Configuración inicial de usuario (SSO NTLM) y Carga de Panel General
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const usuario = await fetchAPI('/auth/mi-sesion');
-        document.getElementById('user-info').innerHTML = `<i class="fa-solid fa-user-check"></i> ${usuario.nombre} <br><small>${usuario.rol}</small>`;
+        // 1. Le pedimos al backend que lea el gafete de Windows del usuario actual
+        const respuesta = await fetchAPI('/auth/me');
+        const usuario = respuesta.usuario;
 
-        if (usuario.rol !== 'Administrador') {
-            document.getElementById('menu-nomina').classList.add('hidden');
-            // Si quieres ocultar el menú de reportes al cajero, descomenta esta línea:
-            // document.getElementById('menu-reportes').classList.add('hidden');
+        // 2. Mostramos su nombre y su puesto en la esquina del menú lateral
+        document.getElementById('user-info').innerHTML = `
+            <i class="fa-solid fa-circle-user"></i> ${usuario.nombre.split('\\').pop()} <br>
+            <small class="text-warning fw-bold">${usuario.rol}</small>
+        `;
+
+        // 3. LA MAGIA VISUAL: Si es un Cajero, le escondemos los módulos confidenciales
+        if (usuario.rol === 'Cajero') {
+            document.getElementById('menu-inventario').style.display = 'none';
+            document.getElementById('menu-nomina').style.display = 'none';
+            document.getElementById('menu-reportes').style.display = 'none'; 
+            
+            // Opcional: Forzamos a que inicie directamente en la pestaña de Ventas
+            document.getElementById('menu-ventas').click(); 
+        } else {
+            // Si es Administrador, inicia en el Dashboard general
+            document.getElementById('menu-inicio').click();
         }
 
-        // ====================================================
-        // NUEVO: CARGAR LOS DATOS DINÁMICOS DEL INICIO
-        // ====================================================
-        const resumen = await fetchAPI('/reportes/resumen');
-        
-        // Seleccionamos las etiquetas <h2> dentro del módulo de inicio (en el mismo orden en que las pusimos)
-        const tarjetas = document.querySelectorAll('#modulo-inicio .dashboard-card h2');
-        
-        // Les inyectamos los datos reales
-        tarjetas[0].textContent = `$${resumen.ventasHoy.toFixed(2)}`; // Ventas Hoy
-        tarjetas[1].textContent = resumen.productosActivos;           // Productos
-        tarjetas[2].textContent = resumen.personal;                   // Personal
-        tarjetas[3].textContent = resumen.stockBajo;                  // Stock Bajo
-        // ====================================================
-
-        cambiarModulo('modulo-inicio', 'menu-inicio');
-
     } catch (error) {
-        
-        document.getElementById('user-info').innerHTML = `<i class="fa-solid fa-user-xmark" style="color:#ef4444;"></i> <br><small style="color:#ef4444;">${error.message}</small>`;
-        cambiarModulo('modulo-inicio', 'menu-inicio');
+        // Si no es ni Admin ni Cajero, le mostramos un error y ocultamos todo
+        document.getElementById('user-info').innerHTML = `
+            <i class="fa-solid fa-triangle-exclamation text-danger"></i> Acceso Denegado
+        `;
+        UI.toast('error', 'Tu usuario de red no tiene permisos para este sistema.');
     }
 });
 

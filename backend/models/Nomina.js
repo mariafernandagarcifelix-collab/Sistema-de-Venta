@@ -1,10 +1,11 @@
-// backend/models/Nomina.js
+
 const mongoose = require('mongoose');
 
-const nominaSchema = new mongoose.Schema({
+const NominaSchema = new mongoose.Schema({
     empleado: { type: mongoose.Schema.Types.ObjectId, ref: 'Empleado', required: true },
-    fecha_pago: { type: Date, default: Date.now },
-    monto: { type: Number, required: true }
+    dias_trabajados: { type: Number, required: true }, // Nuevo campo
+    monto: { type: Number, required: true }, // El total calculado
+    fecha_pago: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Nomina', nominaSchema);
+module.exports = mongoose.model('Nomina', NominaSchema);

@@ -1,10 +1,7 @@
 // frontend/js/api.js
-
-// ¡OJO AQUÍ, FER! 
-// Para probar en tu compu, déjalo como 'http://localhost:3000'
-// Cuando vayas a presentarlo en la red local, cámbialo por la IP de tu Windows Server, ej: 'http://192.168.1.10:3000'
-// frontend/js/api.js
+//const BASE_URL = 'http://www.cuadras.com:3000/api';
 const BASE_URL = 'http://localhost:3000/api';
+// const BASE_URL = 'http://192.168.1.50:3000/api';
 
 async function fetchAPI(endpoint, options = {}) {
     try {
@@ -29,3 +26,35 @@ async function fetchAPI(endpoint, options = {}) {
         throw error;
     }
 }
+
+// ========================================================
+// HELPERS GLOBALES: Alertas bonitas y diseño Glassmorphism
+// ========================================================
+const UI = {
+    toast: (icon, title) => {
+        Swal.fire({ 
+            toast: true, 
+            position: 'top-end', 
+            icon, 
+            title, 
+            showConfirmButton: false, 
+            timer: 3000, 
+            background: document.body.classList.contains('dark') ? '#1e293b' : '#ffffff', 
+            color: document.body.classList.contains('dark') ? '#ffffff' : '#000000' 
+        });
+    },
+    confirm: async (title, text) => {
+        return await Swal.fire({ 
+            title, 
+            text, 
+            icon: 'warning', 
+            showCancelButton: true, 
+            confirmButtonColor: '#10b981', // Color verde
+            cancelButtonColor: '#ef4444',  // Color rojo
+            confirmButtonText: 'Sí, continuar', 
+            cancelButtonText: 'Cancelar', 
+            background: document.body.classList.contains('dark') ? '#1e293b' : '#ffffff', 
+            color: document.body.classList.contains('dark') ? '#ffffff' : '#000000' 
+        });
+    }
+};

@@ -1,22 +1,26 @@
 const express = require("express");
 const router = express.Router();
+
+// 1. Importamos todas las funciones, incluyendo la nueva de abastecer
 const {
   obtenerProductos,
   crearProducto,
   actualizarProducto,
   eliminarProducto,
+  abastecerProducto
 } = require("../controllers/productoController");
-const { verificarUsuarioLocal, verificarRol } = require("../middlewares/auth");
 
-// Todas las rutas de productos requieren estar logueado (verificado en la DB)
-router.use(verificarUsuarioLocal);
+const { verificarRol } = require("../middlewares/auth");
 
-// Cajeros y Administradores pueden ver el inventario
+// 2. Aplicamos el "Cadenero" general para estas rutas.
+// Al poner ['Administrador', 'Cajero'] aquí arriba, les damos acceso total a ambos
+router.use(verificarRol(["Administrador", "Cajero"]));
+
+// 3. Definimos las rutas (ya no necesitan verificar el rol individualmente)
 router.get("/", obtenerProductos);
-
-// Solo el Administrador puede crear, editar o eliminar productos
-router.post("/", verificarRol(["Administrador"]), crearProducto);
-router.put("/:id", verificarRol(["Administrador"]), actualizarProducto);
-router.delete("/:id", verificarRol(["Administrador"]), eliminarProducto);
+router.post("/", crearProducto);
+router.put("/:id", actualizarProducto);
+router.delete("/:id", eliminarProducto);
+router.patch("/:id/abastecer", abastecerProducto);
 
 module.exports = router;

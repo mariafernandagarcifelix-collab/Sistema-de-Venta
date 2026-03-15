@@ -7,10 +7,8 @@ const connectDB = require("./config/database.js");
 
 const app = express();
 
-const {
-  autenticacionWindows,
-  verificarUsuarioLocal,
-} = require("./middlewares/auth");
+// 1. IMPORTAMOS EL NUEVO ESCÁNER SSO (node-expose-sspi)
+const { ssoMiddleware } = require("./middlewares/auth");
 
 // Conexión a MongoDB
 connectDB();
@@ -25,6 +23,19 @@ app.use(
   }),
 );
 
+const opcionesCors = {
+    // Pon aquí todas las formas en las que las compus podrían llamar al servidor
+    origin: [
+        'http://localhost:3000', 
+        'http://www.cuadras.com', 
+        'http://www.cuadras.com:3000',
+        'http://192.168.1.50', // Reemplaza con la IP real del servidor de Carlos
+        'http://192.168.1.50:3000'
+    ],
+    credentials: true // VITAL: Si esto no está en true, el Active Directory no funciona en red
+};
+app.use(cors(opcionesCors));
+
 // Parsear JSON en el body de las peticiones
 app.use(express.json());
 
@@ -33,7 +44,7 @@ const path = require("path");
 // Exponer la carpeta "public" para que las imágenes sean accesibles en la red local
 app.use("/public", express.static(path.join(__dirname, "public")));
 
-// ¡NUEVO! Exponer todo el frontend para evitar errores de CORS al probar localmente
+// Exponer todo el frontend para evitar errores de CORS al probar localmente
 const frontendPath = path.join(__dirname, "../frontend");
 console.log("[Static] Servir frontend desde:", frontendPath);
 app.use(express.static(frontendPath));
@@ -47,9 +58,18 @@ app.use((req, res, next) => {
 // Logger de accesos (morgan registrará cada petición HTTP en la consola)
 app.use(morgan("dev"));
 
-// Protección global de la API: autenticación Windows + verificación en DB.
-// Esto aplica a todas las rutas bajo `/api` y debe declararse antes de montar las rutas.
-app.use("/api", autenticacionWindows, verificarUsuarioLocal);
+// --- RUTA PÚBLICA DE DIAGNÓSTICO ---
+// La ponemos ANTES del SSO para que responda sin pedir sesión de Windows
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    estado: "OK",
+    mensaje: "Servidor POS funcionando en red local",
+  });
+});
+
+// --- PROTECCIÓN GLOBAL DE LA API ---
+// 2. CONECTAMOS EL NUEVO ESCÁNER SSO A TODAS LAS RUTAS
+app.use("/api", ssoMiddleware);
 
 // Importar rutas
 const authRoutes = require("./routes/authRoutes");
@@ -66,17 +86,7 @@ app.use("/api/empleados", empleadoRoutes);
 app.use("/api/nomina", nominaRoutes);
 app.use("/api/ventas", ventaRoutes);
 app.use("/api/reportes", reporteRoutes);
-// Protección por ruta: cada router aplica su propio middleware de autenticación
-// (p. ej. `router.use(verificarUsuarioLocal)` en `productoRoutes`).
-// Eliminamos la protección global aquí para respetar la protección por ruta.
 
-// Ruta base de prueba
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    estado: "OK",
-    mensaje: "Servidor POS funcionando en red local",
-  });
-});
 
 // Fallback 404 para ayudar al diagnóstico
 app.use((req, res) => {

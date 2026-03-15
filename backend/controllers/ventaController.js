@@ -1,10 +1,11 @@
 const Venta = require('../models/Venta');
 const Producto = require('../models/Producto');
+const Usuario = require('../models/Usuario'); // <--- ¡NUEVO! Importamos Usuario para buscar al cajero
 
 // Registrar una nueva venta
 const registrarVenta = async (req, res) => {
     try {
-        const { productos } = req.body; // El frontend solo envía un array: [{ producto: "ID", cantidad: 2 }]
+        const { productos } = req.body; 
         
         if (!productos || productos.length === 0) {
             return res.status(400).json({ error: 'La venta debe incluir al menos un producto.' });
@@ -49,9 +50,17 @@ const registrarVenta = async (req, res) => {
             });
         }
 
-        // 3. Guardar la venta vinculándola al Cajero que hizo la petición
+        // 3. LA MAGIA DEL SSO: Buscar el ID del cajero basado en su Gafete de Windows
+        const windowsUser = req.sso.user.name;
+        const cajeroDB = await Usuario.findOne({ username: windowsUser });
+
+        if (!cajeroDB) {
+            return res.status(403).json({ error: 'Error: El cajero no está registrado en la base de datos.' });
+        }
+
+        // 4. Guardar la venta vinculándola al _id real de MongoDB
         const nuevaVenta = new Venta({
-            cajero: req.usuario.id, // Viene del token JWT interceptado por el middleware
+            cajero: cajeroDB._id, // Ahora viene de la búsqueda que acabamos de hacer
             productos: productosProcesados,
             total: totalCalculado
         });
@@ -63,6 +72,7 @@ const registrarVenta = async (req, res) => {
         });
 
     } catch (error) {
+        console.error('[Error Venta]:', error); // Excelente para diagnosticar si algo falla en tu consola
         res.status(500).json({ error: 'Error interno al procesar la venta.' });
     }
 };

@@ -12,9 +12,9 @@ const Venta = require('./models/Venta');
 // 1. Define aquí los usuarios EXACTAMENTE como inician sesión en Windows Server
 const usuariosDePrueba = [
     {
-        nombre: 'Fernanda (Mi Compu)',
+        nombre: 'Fernanda',
         username: 'maria', 
-        rol: 'Administrador' //Ya no esta nomina :)
+        rol: 'Administrador' 
     },
     {
         nombre: 'Fernanda (Admin Redes)',

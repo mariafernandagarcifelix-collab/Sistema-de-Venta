@@ -4,17 +4,18 @@ const Empleado = require('../models/Empleado');
 // Registrar un nuevo pago de nómina
 const registrarPago = async (req, res) => {
     try {
-        const { empleado_id, monto } = req.body;
+        const { empleado, dias_trabajados, monto } = req.body;
 
         // Verificamos que el empleado exista antes de pagarle
-        const empleadoExiste = await Empleado.findById(empleado_id);
+        const empleadoExiste = await Empleado.findById(empleado);
         if (!empleadoExiste) {
             return res.status(404).json({ error: 'Empleado no encontrado.' });
         }
 
         const nuevoPago = new Nomina({
-            empleado: empleado_id,
-            monto: monto || empleadoExiste.salario // Si no envían monto, toma el salario base
+            empleado: empleado,
+            dias_trabajados: dias_trabajados || 1,
+            monto: monto 
         });
 
         await nuevoPago.save();
@@ -24,13 +25,47 @@ const registrarPago = async (req, res) => {
     }
 };
 
-// Obtener el historial de pagos (con los datos del empleado incluidos)
+// Obtener el historial de pagos (AHORA CON FILTROS Y ZONA HORARIA BLINDADA)
 const obtenerHistorialNomina = async (req, res) => {
     try {
-        // Usamos .populate() para traer el nombre y puesto del empleado, no solo su ID
-        const historial = await Nomina.find()
+        const { fechaInicio, fechaFin, empleadoId } = req.query;
+        let filtro = {};
+
+        // Filtro por fechas
+        if (fechaInicio || fechaFin) {
+            filtro.fecha_pago = {};
+            
+            if (fechaInicio) {
+                // Reemplazamos guiones por diagonales para forzar la hora de México
+                const inicioStr = fechaInicio.replace(/-/g, '/');
+                const inicio = new Date(inicioStr);
+                inicio.setHours(0, 0, 0, 0); 
+                filtro.fecha_pago.$gte = inicio;
+
+                // Si solo mandaron fecha de inicio, busca solo en ese día
+                if (!fechaFin) {
+                    const fin = new Date(inicioStr);
+                    fin.setHours(23, 59, 59, 999);
+                    filtro.fecha_pago.$lte = fin;
+                }
+            }
+            
+            if (fechaFin) {
+                const finStr = fechaFin.replace(/-/g, '/');
+                const fin = new Date(finStr);
+                fin.setHours(23, 59, 59, 999);
+                filtro.fecha_pago.$lte = fin;
+            }
+        }
+
+        // Filtro por empleado
+        if (empleadoId) {
+            filtro.empleado = empleadoId;
+        }
+
+        const historial = await Nomina.find(filtro)
                                       .populate('empleado', 'nombre puesto')
-                                      .sort({ fecha_pago: -1 }); // Ordenar del más reciente al más antiguo
+                                      .sort({ fecha_pago: -1 }); 
         res.json(historial);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener el historial de nómina.' });

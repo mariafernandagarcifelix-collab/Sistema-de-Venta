@@ -115,4 +115,52 @@ const resumenDashboard = async (req, res) => {
     }
 };
 
-module.exports = { ventasPorDia, ventasPorMes, productosMasVendidos, resumenDashboard };
+const obtenerHistorialVentas = async (req, res) => {
+    try {
+        const { fechaInicio, fechaFin, productoId } = req.query;
+        let filtro = {};
+
+        // Filtro por fechas (Blindado contra zonas horarias)
+        if (fechaInicio || fechaFin) {
+            filtro.fecha = {};
+            
+            if (fechaInicio) {
+                // EL TRUCO: Reemplazar guiones por diagonales fuerza la hora local de México
+                const inicioStr = fechaInicio.replace(/-/g, '/');
+                const inicio = new Date(inicioStr);
+                inicio.setHours(0, 0, 0, 0); // Desde las 00:00:00 de hoy
+                filtro.fecha.$gte = inicio;
+
+                // Si NO mandaron fecha fin, el límite es el final de este mismo día
+                if (!fechaFin) {
+                    const fin = new Date(inicioStr);
+                    fin.setHours(23, 59, 59, 999); // Hasta las 23:59:59 de hoy
+                    filtro.fecha.$lte = fin;
+                }
+            }
+            
+            if (fechaFin) {
+                const finStr = fechaFin.replace(/-/g, '/');
+                const fin = new Date(finStr);
+                fin.setHours(23, 59, 59, 999);
+                filtro.fecha.$lte = fin;
+            }
+        }
+
+        // Filtro por producto
+        if (productoId) {
+            filtro['productos.producto'] = productoId;
+        }
+
+        const ventas = await Venta.find(filtro)
+            .populate('cajero', 'nombre')
+            .populate('productos.producto', 'nombre')
+            .sort({ fecha: -1 });
+
+        res.json(ventas);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener historial de ventas' });
+    }
+};
+
+module.exports = { ventasPorDia, ventasPorMes, productosMasVendidos, resumenDashboard, obtenerHistorialVentas };

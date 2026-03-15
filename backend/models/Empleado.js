@@ -1,10 +1,10 @@
-// backend/models/Empleado.js
+
 const mongoose = require('mongoose');
 
-const empleadoSchema = new mongoose.Schema({
+const EmpleadoSchema = new mongoose.Schema({
     nombre: { type: String, required: true },
     puesto: { type: String, required: true },
-    salario: { type: Number, required: true }
-}, { timestamps: true });
+    sueldo_base: { type: Number, required: true } // Cambiado de salario a sueldo_base por día
+});
 
-module.exports = mongoose.model('Empleado', empleadoSchema);
+module.exports = mongoose.model('Empleado', EmpleadoSchema);

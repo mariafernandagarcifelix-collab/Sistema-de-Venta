@@ -1,53 +1,41 @@
-const ntlm = require('express-ntlm');
-const Usuario = require('../models/Usuario');
+const { sso } = require('node-expose-sspi');
 
-// 1. Middleware que le pide al navegador las credenciales de Windows
-const autenticacionWindows = ntlm({
-    debug: function() {
-        // Puedes poner console.log aquí si quieres ver la negociación interna
-    },
-    // domain: 'TUDOMINIO' // Opcional: Si tienes un dominio estricto configurado en el server
-});
+// 1. El Escáner de Gafetes
+const ssoMiddleware = sso.auth();
 
-// 2. Middleware que verifica el rol en MongoDB basado en el usuario de Windows
-const verificarUsuarioLocal = async (req, res, next) => {
-    // NTLM nos entrega el nombre de usuario de la sesión de Windows en req.ntlm.UserName
-    if (!req.ntlm || !req.ntlm.UserName) {
-        return res.status(401).json({ error: 'No se detectó una sesión activa de Windows.' });
-    }
-
-    const usernameWindows = req.ntlm.UserName.toLowerCase(); // Ej: 'fernanda' o 'cajero1'
-
-    try {
-        // Buscamos si ese usuario de Windows tiene permisos en nuestro sistema
-        const usuarioDB = await Usuario.findOne({ username: usernameWindows });
-
-        if (!usuarioDB) {
-            return res.status(403).json({ error: `El usuario de Windows '${usernameWindows}' no está registrado en el POS.` });
-        }
-
-        // Si existe, lo guardamos en la request para que los controladores lo usen
-        req.usuario = {
-            id: usuarioDB._id,
-            nombre: usuarioDB.nombre,
-            username: usernameWindows,
-            rol: usuarioDB.rol
-        };
-        
-        next();
-    } catch (error) {
-        res.status(500).json({ error: 'Error al verificar el usuario de Windows.' });
-    }
-};
-
-// 3. El mismo verificador de roles que ya teníamos
+// 2. El Cadenero de los Módulos
 const verificarRol = (rolesPermitidos) => {
     return (req, res, next) => {
-        if (!rolesPermitidos.includes(req.usuario.rol)) {
-            return res.status(403).json({ error: 'Acceso denegado. Tu rol de Windows no tiene permisos para esto.' });
+        if (!req.sso || !req.sso.user) {
+            return res.status(401).json({ error: 'No autorizado. Gafete de Windows no detectado.' });
         }
+
+        const gruposAD = req.sso.user.groups || [];
+        
+        // Buscamos específicamente a qué grupo pertenecen
+        const esAdmin = gruposAD.some(grupo => grupo.toLowerCase().includes('admin'));
+        const esCajero = gruposAD.some(grupo => grupo.toLowerCase().includes('cajero'));
+        
+        let rolUsuario = null;
+
+        // Asignamos el rol estricto
+        if (esAdmin) {
+            rolUsuario = 'Administrador';
+        } else if (esCajero) {
+            rolUsuario = 'Cajero';
+        } else {
+            // Si entra alguien de otro departamento, lo bloqueamos por completo
+            return res.status(403).json({ error: 'Acceso denegado. Tu usuario no pertenece al grupo de Cajeros ni Administradores del sistema.' });
+        }
+
+        // Verificamos si ese rol tiene permiso para la ruta que está pidiendo
+        if (!rolesPermitidos.includes(rolUsuario)) {
+            return res.status(403).json({ error: 'Acceso denegado. Esta bóveda es solo para ' + rolesPermitidos.join(' o ') });
+        }
+        
+        req.usuario = { nombre: req.sso.user.name, rol: rolUsuario };
         next();
     };
 };
 
-module.exports = { autenticacionWindows, verificarUsuarioLocal, verificarRol };
+module.exports = { ssoMiddleware, verificarRol };

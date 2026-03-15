@@ -45,4 +45,5 @@ const eliminarEmpleado = async (req, res) => {
     }
 };
 
+
 module.exports = { obtenerEmpleados, crearEmpleado, actualizarEmpleado, eliminarEmpleado };

@@ -6,11 +6,12 @@ const {
   actualizarEmpleado,
   eliminarEmpleado,
 } = require("../controllers/empleadoController");
-const { verificarUsuarioLocal, verificarRol } = require("../middlewares/auth");
 
-// Protegemos TODAS las rutas de este archivo
-router.use(verificarUsuarioLocal);
-router.use(verificarRol(["Administrador"])); // Bloqueo absoluto para Cajeros
+// Solo importamos verificarRol
+const { verificarRol } = require("../middlewares/auth");
+
+// Bloqueo absoluto para Cajeros
+router.use(verificarRol(["Administrador"])); 
 
 router.get("/", obtenerEmpleados);
 router.post("/", crearEmpleado);

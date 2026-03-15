@@ -45,4 +45,20 @@ const eliminarProducto = async (req, res) => {
     }
 };
 
-module.exports = { obtenerProductos, crearProducto, actualizarProducto, eliminarProducto };
+// Abastecer stock
+const abastecerProducto = async (req, res) => {
+    try {
+        const { cantidad } = req.body;
+        const producto = await Producto.findByIdAndUpdate(
+            req.params.id, 
+            { $inc: { stock: Number(cantidad) } }, // $inc suma a la cantidad actual
+            { new: true }
+        );
+        res.json(producto);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al abastecer producto' });
+    }
+};
+
+
+module.exports = { obtenerProductos, crearProducto, actualizarProducto, eliminarProducto, abastecerProducto };

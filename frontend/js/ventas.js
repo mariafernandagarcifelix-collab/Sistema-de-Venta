@@ -1,7 +1,7 @@
 // frontend/js/ventas.js
 
 let carrito = [];
-let productosDisponibles = []; // Guardamos los productos en memoria para buscar sus precios rápido
+let productosDisponibles = []; 
 
 // 1. Cargar los productos desde el backend al abrir la pantalla
 async function cargarProductosParaVenta() {
@@ -9,14 +9,11 @@ async function cargarProductosParaVenta() {
         const select = document.getElementById('producto-select');
         select.innerHTML = '<option value="">Cargando...</option>';
 
-        // Obtenemos los productos activos desde el backend
         productosDisponibles = await fetchAPI('/productos');
         
-        // Limpiamos y llenamos el select
         select.innerHTML = '<option value="">Selecciona un producto</option>';
         
         productosDisponibles.forEach(prod => {
-            // Solo mostramos productos que tengan stock
             if (prod.stock > 0) {
                 const option = document.createElement('option');
                 option.value = prod._id;
@@ -25,7 +22,7 @@ async function cargarProductosParaVenta() {
             }
         });
     } catch (error) {
-        alert('Error al cargar productos: ' + error.message);
+        UI.toast('error', 'Error al cargar el inventario');
     }
 }
 
@@ -35,35 +32,35 @@ function agregarAlCarrito() {
     const cantidadInput = document.getElementById('cantidad-input');
     
     const productoId = select.value;
-    const cantidad = parseInt(cantidadInput.value);
+    // Si la caja está vacía, forzamos a que sea 0 para que lance la alerta de cantidad inválida
+    const cantidad = parseInt(cantidadInput.value) || 0; 
 
     if (!productoId || cantidad <= 0) {
-        alert('Por favor selecciona un producto y una cantidad válida.');
+        UI.toast('warning', 'Selecciona un producto y una cantidad válida');
         return;
     }
 
-    // Buscamos los datos completos del producto en nuestra lista en memoria
     const productoInfo = productosDisponibles.find(p => p._id === productoId);
 
-    // Validamos el stock localmente antes de agregarlo al carrito
+    // Validamos el stock localmente
     if (cantidad > productoInfo.stock) {
-        alert(`Solo hay ${productoInfo.stock} unidades de ${productoInfo.nombre} disponibles.`);
+        UI.toast('error', `Solo hay ${productoInfo.stock} unidades de ${productoInfo.nombre}`);
+        cantidadInput.value = ''; // <-- Vaciamos la caja por falta de stock
         return;
     }
 
-    // Verificamos si el producto ya está en el carrito
     const itemExistente = carrito.find(item => item.productoId === productoId);
 
     if (itemExistente) {
         // Validamos que la nueva suma no exceda el stock
         if (itemExistente.cantidad + cantidad > productoInfo.stock) {
-            alert('No puedes agregar más de la cantidad en stock.');
+            UI.toast('error', 'No puedes agregar más del stock disponible');
+            cantidadInput.value = ''; // <-- Vaciamos la caja por falta de stock
             return;
         }
         itemExistente.cantidad += cantidad;
         itemExistente.subtotal = itemExistente.cantidad * productoInfo.precio;
     } else {
-        // Si no existe, lo agregamos como nuevo
         carrito.push({
             productoId: productoInfo._id,
             nombre: productoInfo.nombre,
@@ -73,9 +70,10 @@ function agregarAlCarrito() {
         });
     }
 
-    // Limpiamos los inputs y actualizamos la tabla
+    // Limpiamos los inputs y regresamos el 1 por defecto para el siguiente producto
     select.value = '';
     cantidadInput.value = '1';
+    UI.toast('success', 'Agregado a la caja');
     renderizarCarrito();
 }
 
@@ -92,12 +90,12 @@ function renderizarCarrito() {
         
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${item.nombre}</td>
+            <td class="fw-bold">${item.nombre}</td>
             <td>$${item.precio.toFixed(2)}</td>
-            <td>${item.cantidad}</td>
-            <td>$${item.subtotal.toFixed(2)}</td>
+            <td><span class="badge bg-secondary">${item.cantidad}</span></td>
+            <td class="text-success fw-bold">$${item.subtotal.toFixed(2)}</td>
             <td>
-                <button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${index})">✖️</button>
+                <button class="btn btn-outline-danger btn-sm shadow-sm" onclick="eliminarDelCarrito(${index})"><i class="fa-solid fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -109,41 +107,63 @@ function renderizarCarrito() {
 // 4. Quitar un producto del carrito
 function eliminarDelCarrito(index) {
     carrito.splice(index, 1);
+    UI.toast('info', 'Producto retirado');
     renderizarCarrito();
 }
 
 // 5. Enviar la venta al backend
 async function procesarVenta() {
     if (carrito.length === 0) {
-        alert('El carrito está vacío.');
+        UI.toast('warning', 'La caja registradora está vacía');
         return;
     }
 
+    const confirmar = await UI.confirm('¿Cobrar venta?', `Se registrará un pago por $${document.getElementById('total-venta').textContent}`);
+    
+    if (!confirmar.isConfirmed) {
+        return; 
+    }
+
     try {
-        // Formateamos los datos como el backend los espera: [{ producto: "ID", cantidad: 2 }]
         const productosParaBackend = carrito.map(item => ({
             producto: item.productoId,
             cantidad: item.cantidad
         }));
 
-        // Hacemos la petición POST a nuestra API
-        const respuesta = await fetchAPI('/ventas', {
+        await fetchAPI('/ventas', {
             method: 'POST',
             body: JSON.stringify({ productos: productosParaBackend })
         });
 
-        alert('¡Venta registrada con éxito!');
+        UI.toast('success', '¡Venta cobrada con éxito!');
         
-        // Limpiamos el carrito, actualizamos la tabla y recargamos los productos 
-        // para que el select muestre el nuevo stock actualizado desde la BD.
         carrito = [];
         renderizarCarrito();
         await cargarProductosParaVenta();
 
     } catch (error) {
-        alert('Error al procesar la venta: ' + error.message);
+        UI.toast('error', error.message || 'Error al procesar la venta');
     }
 }
+
+// ==========================================
+// MEJORAS DE UX (Experiencia de Usuario)
+// ==========================================
+const inputCantidad = document.getElementById('cantidad-input');
+
+// Cuando el usuario hace clic adentro de la cajita, quitamos el 1 automáticamente
+inputCantidad.addEventListener('focus', function() {
+    if (this.value === '1') {
+        this.value = '';
+    }
+});
+
+// Si el usuario da clic afuera sin haber escrito nada, le regresamos el 1 por seguridad
+inputCantidad.addEventListener('blur', function() {
+    if (this.value === '' || parseInt(this.value) <= 0) {
+        this.value = '1';
+    }
+});
 
 // Inicializar cargando los productos
 cargarProductosParaVenta();

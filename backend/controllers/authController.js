@@ -1,58 +1,70 @@
-const Usuario = require('../models/Usuario');
-const jwt = require('jsonwebtoken');
+const Empleado = require('../models/Empleado');
 
-// Controlador para iniciar sesión
-const login = async (req, res) => {
+// Iniciar sesión leyendo el Gafete de Windows (SSO)
+const loginSSO = async (req, res) => {
     try {
-        const { username, password } = req.body;
-
-        // 1. Buscar al usuario
-        const usuario = await Usuario.findOne({ username });
-        if (!usuario) {
-            return res.status(404).json({ error: 'Usuario no encontrado.' });
+        // 1. Verificamos que el usuario de Windows esté presente
+        if (!req.sso || !req.sso.user) {
+            return res.status(401).json({ error: 'No se detectó un usuario de red válido.' });
         }
 
-        // 2. Verificar la contraseña usando el método del modelo
-        const passwordValida = await usuario.compararPassword(password);
-        if (!passwordValida) {
-            return res.status(401).json({ error: 'Contraseña incorrecta.' });
+        const nombreWindows = req.sso.user.name; // Ej. DOMINIO\Carlos
+        const gruposAD = req.sso.user.groups || [];
+
+        // 2. Buscamos estrictamente a qué grupo pertenecen
+        const esAdmin = gruposAD.some(grupo => grupo.toLowerCase().includes('admin'));
+        const esCajero = gruposAD.some(grupo => grupo.toLowerCase().includes('cajero'));
+
+        let rolAsignado = null;
+
+        if (esAdmin) {
+            rolAsignado = 'Administrador';
+        } else if (esCajero) {
+            rolAsignado = 'Cajero';
+        } else {
+            // Si es un intruso de otro grupo, lo botamos antes de que toque la base de datos
+            return res.status(403).json({ error: 'Tu usuario de red no pertenece a Administradores ni a Cajeros.' });
         }
 
-        // 3. Generar el JWT
-        const token = jwt.sign(
-            { id: usuario._id, rol: usuario.rol, nombre: usuario.nombre },
-            process.env.JWT_SECRET,
-            { expiresIn: '8h' } // El token caduca en 8 horas (una jornada laboral)
-        );
+        // 3. Sincronizamos con MongoDB
+        // Buscamos si este usuario ya existe en nuestra base de datos
+        let empleado = await Empleado.findOne({ nombre: nombreWindows });
 
+        if (empleado) {
+            // Si ya existe, le actualizamos el rol por si Carlos lo cambió de puesto en el Servidor
+            if (empleado.puesto !== rolAsignado) {
+                empleado.puesto = rolAsignado;
+                await empleado.save();
+            }
+        } else {
+            // Si es su primer día de trabajo, lo registramos automáticamente en MongoDB
+            empleado = new Empleado({
+                nombre: nombreWindows,
+                puesto: rolAsignado,
+                sueldo_base: 0 // Luego Recursos Humanos le puede poner su sueldo real en el módulo de Nómina
+            });
+            await empleado.save();
+        }
+
+        // 4. Le damos la bienvenida al Frontend
         res.json({
-            mensaje: 'Login exitoso',
-            token,
+            mensaje: 'Inicio de sesión autorizado',
             usuario: {
-                nombre: usuario.nombre,
-                rol: usuario.rol
+                id: empleado._id,
+                nombre: empleado.nombre,
+                rol: empleado.puesto
             }
         });
 
     } catch (error) {
-        res.status(500).json({ error: 'Error en el servidor durante el login.' });
+        console.error('Error en la sincronización del login:', error);
+        res.status(500).json({ error: 'Error interno al validar las credenciales en la base de datos.' });
     }
 };
 
-// Controlador auxiliar para crear el primer usuario administrador (para tus pruebas)
-const registrarPrimerAdmin = async (req, res) => {
-    try {
-        const adminExiste = await Usuario.findOne({ rol: 'Administrador' });
-        if (adminExiste) {
-            return res.status(400).json({ error: 'Ya existe un administrador en el sistema.' });
-        }
-
-        const nuevoAdmin = new Usuario(req.body);
-        await nuevoAdmin.save();
-        res.status(201).json({ mensaje: 'Administrador creado con éxito.' });
-    } catch (error) {
-        res.status(500).json({ error: 'Error al crear el administrador.' });
-    }
+// Cerrar sesión (En Windows SSO esto suele ser limpiar la vista del frontend, pero dejamos la ruta por buenas prácticas)
+const logout = (req, res) => {
+    res.json({ mensaje: 'Sesión finalizada. Cierra tu navegador por seguridad.' });
 };
 
-module.exports = { login, registrarPrimerAdmin };
+module.exports = { loginSSO, logout };

@@ -4,13 +4,15 @@ const {
   registrarPago,
   obtenerHistorialNomina,
 } = require("../controllers/nominaController");
-const { verificarUsuarioLocal, verificarRol } = require("../middlewares/auth");
+
+// Solo importamos verificarRol
+const { verificarRol } = require("../middlewares/auth");
 
 // Protección estricta: Solo Administradores
-router.use(verificarUsuarioLocal);
 router.use(verificarRol(["Administrador"]));
 
-router.post("/pagar", registrarPago);
-router.get("/historial", obtenerHistorialNomina);
+// Tu nuevo frontend hace un POST directamente a '/' para pagar
+router.post("/", registrarPago);
+router.get("/", obtenerHistorialNomina);
 
 module.exports = router;

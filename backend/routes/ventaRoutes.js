@@ -4,12 +4,14 @@ const {
   registrarVenta,
   obtenerVentas,
 } = require("../controllers/ventaController");
-const { verificarUsuarioLocal } = require("../middlewares/auth");
 
-// Todas las rutas de ventas requieren que el usuario esté logueado
-router.use(verificarUsuarioLocal);
+// Importamos nuestro cadenero basado en roles
+const { verificarRol } = require("../middlewares/auth");
 
-// Cualquier usuario logueado (Cajero o Admin) puede registrar ventas y ver el historial
+// Permitimos que tanto Administradores como Cajeros puedan usar la Caja Registradora
+router.use(verificarRol(["Administrador", "Cajero"]));
+
+
 router.post("/", registrarVenta);
 router.get("/", obtenerVentas);
 
