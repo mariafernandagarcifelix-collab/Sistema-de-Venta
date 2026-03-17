@@ -1,6 +1,6 @@
 const Venta = require('../models/Venta');
 const Producto = require('../models/Producto');
-const Usuario = require('../models/Usuario'); // <--- ¡NUEVO! Importamos Usuario para buscar al cajero
+const Empleado = require('../models/Empleado'); // <--- CAMBIO 1: Importamos Empleado en lugar de Usuario
 
 // Registrar una nueva venta
 const registrarVenta = async (req, res) => {
@@ -32,7 +32,6 @@ const registrarVenta = async (req, res) => {
                 });
             }
 
-            // Calcular el subtotal real usando el precio de la base de datos
             const subtotal = productoDB.precio * item.cantidad;
             totalCalculado += subtotal;
 
@@ -46,33 +45,38 @@ const registrarVenta = async (req, res) => {
         // 2. Descontar el stock de la base de datos
         for (let item of productosProcesados) {
             await Producto.findByIdAndUpdate(item.producto, {
-                $inc: { stock: -item.cantidad } // $inc con valor negativo resta al stock actual
+                $inc: { stock: -item.cantidad }
             });
         }
 
-        // 3. LA MAGIA DEL SSO: Buscar el ID del cajero basado en su Gafete de Windows
-        const windowsUser = req.sso.user.name;
-        const cajeroDB = await Usuario.findOne({ username: windowsUser });
+        // 3. LA MAGIA DEL SSO (CORREGIDA): 
+        // Usamos req.usuario.nombre que ya viene limpio del middleware de auth
+        const windowsUser = req.usuario.nombre; 
+        
+        // CAMBIO 2: Buscamos en la colección de Empleado por el campo 'nombre'
+        const cajeroDB = await Empleado.findOne({ nombre: windowsUser });
 
         if (!cajeroDB) {
-            return res.status(403).json({ error: 'Error: El cajero no está registrado en la base de datos.' });
+            return res.status(403).json({ 
+                error: `Error: El cajero [${windowsUser}] no está registrado en la plantilla de Empleados.` 
+            });
         }
 
-        // 4. Guardar la venta vinculándola al _id real de MongoDB
+        // 4. Guardar la venta vinculándola al _id real del Empleado
         const nuevaVenta = new Venta({
-            cajero: cajeroDB._id, // Ahora viene de la búsqueda que acabamos de hacer
+            cajero: cajeroDB._id, 
             productos: productosProcesados,
             total: totalCalculado
         });
 
         await nuevaVenta.save();
         res.status(201).json({ 
-            mensaje: 'Venta registrada exitosamente y stock actualizado', 
+            mensaje: 'Venta registrada exitosamente', 
             venta: nuevaVenta 
         });
 
     } catch (error) {
-        console.error('[Error Venta]:', error); // Excelente para diagnosticar si algo falla en tu consola
+        console.error('[Error Venta]:', error);
         res.status(500).json({ error: 'Error interno al procesar la venta.' });
     }
 };
@@ -80,11 +84,12 @@ const registrarVenta = async (req, res) => {
 // Obtener todas las ventas (para el historial)
 const obtenerVentas = async (req, res) => {
     try {
-        // .populate() nos trae los datos legibles del cajero y de los productos en lugar de solo sus IDs
         const ventas = await Venta.find()
-            .populate('cajero', 'nombre username')
+            // CAMBIO 3: Asegúrate de que el modelo Venta use ref: 'Empleado' 
+            // para que este populate funcione y te traiga el nombre real
+            .populate('cajero', 'nombre puesto') 
             .populate('productos.producto', 'nombre categoria')
-            .sort({ fecha: -1 }); // De la más reciente a la más antigua
+            .sort({ fecha: -1 });
             
         res.json(ventas);
     } catch (error) {

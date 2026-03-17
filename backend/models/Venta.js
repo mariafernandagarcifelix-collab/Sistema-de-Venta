@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const ventaSchema = new mongoose.Schema({
     fecha: { type: Date, default: Date.now },
-    cajero: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', required: true },
+    cajero: { type: mongoose.Schema.Types.ObjectId, ref: 'Empleado', required: true },
     productos: [{
         producto: { type: mongoose.Schema.Types.ObjectId, ref: 'Producto', required: true },
         cantidad: { type: Number, required: true },
